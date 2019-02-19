@@ -13,7 +13,7 @@ public class TPMMS {
     private static String inputPath = "F:\\books\\COMP6521\\lab\\lab1\\src\\input\\";
     private static String outputPath = "F:\\books\\COMP6521\\lab\\lab1\\src\\output\\";
     private static String inputFileName = "105000.txt";
-    private static float preserveMemPercentageP1 = 0.2f;
+    private static float preserveMemPercentageP1 = 0.15f;
     private static float preserveMemPercentageP2 = 0.0f;
     private static float preserveMemPercentageP3 = 0.1f;
     private static short maxFileToMerge = 80;
@@ -25,23 +25,23 @@ public class TPMMS {
         ioWrite = 0;
         long startTime1 = System.nanoTime();
         phaseOne();
-        System.out.printf("Phase 1 time: %d(s) %n", ((System.nanoTime() - startTime1) / 1000000000));
+        System.out.printf("Phase 1 time: %.2f(s) %n", ((System.nanoTime() - startTime1) / 1000000000.0));
         System.out.printf("IO_Read = %d, IO_Write = %d %n%n", ioRead, ioWrite);
 
         ioRead = 0;
         ioWrite = 0;
         long startTime2 = System.nanoTime();
         phaseTwo();
-        System.out.printf("Phase 2 time: %d(s) %n", ((System.nanoTime() - startTime2) / 1000000000));
+        System.out.printf("Phase 2 time: %.2f(s) %n", ((System.nanoTime() - startTime2) / 1000000000.0));
         System.out.printf("IO_Read = %d, IO_Write = %d %n%n", ioRead, ioWrite);
 
         ioRead = 0;
         ioWrite = 0;
         long startTime3 = System.nanoTime();
         getTop10CostlyClients();
-        System.out.printf("Phase 3 time: %d(s) %n", ((System.nanoTime() - startTime3) / 1000000000));
+        System.out.printf("Phase 3 time: %.2f(s) %n", ((System.nanoTime() - startTime3) / 1000000000.0));
         System.out.printf("IO_Read = %d, IO_Write = %d %n%n", ioRead, ioWrite);
-        System.out.printf("Total time: %d(s) %n", ((System.nanoTime() - startTime1) / 1000000000));
+        System.out.printf("Total time: %.2f(s) %n", ((System.nanoTime() - startTime1) / 1000000000.0));
     }
 
     private static void phaseOne() {
@@ -71,7 +71,6 @@ public class TPMMS {
                     oneBatch.addAll(oneBlock);
                 }
                 totalReadTime += System.nanoTime() - startTime;
-
                 if (!oneBatch.isEmpty()) {
                     // Sort the batch
                     startTime = System.nanoTime();
