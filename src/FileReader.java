@@ -64,7 +64,7 @@ public class FileReader extends BufferedReader {
             String clientEmail = line.substring(202, 230).trim();
             byte itemID = Byte.valueOf(line.substring(230, 232));
             float amountDamage = Float.valueOf(line.substring(232, 241));
-            float amountPaid = Float.valueOf(line.substring(241, 250));
+            double amountPaid = Double.valueOf(line.substring(241, 250));
             return new Tuple(claimID, claimDate, clientID, clientName, clientAddress,
                     clientEmail, itemID, amountDamage, amountPaid);
         } catch (ParseException e) {

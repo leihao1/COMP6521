@@ -5,12 +5,12 @@ import java.util.*;
 
 public class Main {
     public static String inputFileName = "105000.txt";
-    public static String inputPath = "F:\\books\\COMP6521\\lab\\lab1\\src\\input\\";
-    public static String outputPath = "F:\\books\\COMP6521\\lab\\lab1\\src\\output\\";
+    public static String inputPath = "";
+    public static String outputPath = "";
 
     public static float preserveMemory1 = 0.15f;
     public static float preserveMemory2 = 0.0f;
-    public static float preserveMemory3 = 0.1f;
+    public static float preserveMemory3 = 0.15f;
 
     public static byte tupleNumInOneBlock = 15;
 
@@ -25,6 +25,7 @@ public class Main {
         System.out.printf("Total Time: %.2f(s) %n", ((System.nanoTime() - startTime) / 1000000000.0));
 
     }
+
     //clean output folder
     public static void cleanFolder(File outputFolder) {
         if (outputFolder.exists()) {
@@ -192,23 +193,24 @@ public class Main {
                     while (true) {
                         boolean emptyBuffer = false;
                         Tuple minClient = null;
-                        int minClientIndex = -1;
+                        short minClientIndex = -1;
 
                         // get local minimum among all input buffers
-                        for (List<Tuple> buffer : inputBuffers) {
+                        for (short i = 0; i < numOfFileToMerge; i++) {
+                            List<Tuple> oneBuffer = inputBuffers.get(i);
                             // this sublist done, ignore and merge rest
-                            if (buffer == null)
+                            if (oneBuffer == null)
                                 continue;
                             // one buffer is empty, break to above code to fill
-                            if (buffer.isEmpty()) {
+                            if (oneBuffer.isEmpty()) {
                                 emptyBuffer = true;
                                 break;
                             }
                             // get the first tuple in that buffer
-                            Tuple firstTuple = buffer.get(0);
-                            if (minClient == null || (firstTuple.clientID > minClient.clientID) ) {
+                            Tuple firstTuple = oneBuffer.get(0);
+                            if (minClient == null || minClient.clientID > firstTuple.clientID ) {
                                 minClient = firstTuple;
-                                minClientIndex = inputBuffers.indexOf(buffer);
+                                minClientIndex = i;
                             }
                         }
 
@@ -273,9 +275,9 @@ public class Main {
         try {
             List<Tuple> readBuffer = new ArrayList<>();
             inputReader = new FileReader(file, preserveMemory3);
-            HashMap<Integer, Float> top10 = new HashMap<>();
+            HashMap<Integer, Double> top10 = new HashMap<>();
             Integer currentClientId = null;
-            float currentClientPaid = 0;
+            double currentClientPaid = 0.0;
             while (!inputReader.finish) {
                 readBuffer.clear();
                 // read blocks util run out of memory
@@ -290,19 +292,19 @@ public class Main {
                     Integer newClientId = tuple.clientID;
                     if (currentClientId == null) {
                         currentClientId = newClientId;
-                        currentClientPaid = 0;
+                        currentClientPaid = 0.0;
                     // different client, compare paid
                     } else if (currentClientId.intValue() != newClientId.intValue()) {
                         if (top10.size() < 10) {
                             top10.put(currentClientId, currentClientPaid);
                         } else {
                             Integer minClientID = null;
-                            float minPaid = Float.MAX_VALUE;
+                            double minPaid = Double.MAX_VALUE;
                             // get local minimum clientID in top10
-                            for (HashMap.Entry<Integer, Float> entry : top10.entrySet()) {
-                                if (minPaid > entry.getValue()) {
+                            for (HashMap.Entry<Integer, Double> entry : top10.entrySet()) {
+                                if (minPaid > entry.getValue().doubleValue()) {
                                     minClientID = entry.getKey();
-                                    minPaid = entry.getValue();
+                                    minPaid = entry.getValue().doubleValue();
                                 }
                             }
                             // add new top10 member
@@ -312,7 +314,7 @@ public class Main {
                             }
                         }
                         currentClientId = newClientId;
-                        currentClientPaid = 0;
+                        currentClientPaid = 0.0;
                     }
                     // sum all paid of same client
                     currentClientPaid += tuple.amountPaid;
@@ -320,12 +322,12 @@ public class Main {
             }
 
             System.out.println("Top 10 Costly Clients: ");
-            LinkedHashMap<Integer, Float> orderedTop10 = new LinkedHashMap<>();
 
+            LinkedHashMap<Integer, Double> orderedTop10 = new LinkedHashMap<>();
             while(orderedTop10.size() < 10) {
                 int maxClientID = 0;
-                float maxPaid = Float.MIN_VALUE;
-                for (HashMap.Entry<Integer, Float> entry : top10.entrySet()) {
+                double maxPaid = Double.MIN_VALUE;
+                for (HashMap.Entry<Integer, Double> entry : top10.entrySet()) {
                     if (maxPaid < entry.getValue()) {
                         maxClientID = entry.getKey();
                         maxPaid = entry.getValue();
@@ -334,7 +336,8 @@ public class Main {
                 top10.remove(maxClientID);
                 orderedTop10.put(maxClientID, maxPaid);
             }
-            for(HashMap.Entry<Integer, Float> entry : orderedTop10.entrySet()) {
+
+            for(Map.Entry<Integer, Double> entry : orderedTop10.entrySet()) {
                 System.out.println("ClientID: " + entry.getKey() + ", Total Compensation: " + entry.getValue());
             }
         } catch (FileNotFoundException e) {

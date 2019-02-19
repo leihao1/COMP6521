@@ -49,15 +49,4 @@ public class FileWriter extends BufferedWriter {
                 String.format("%1$09.2f", tuple.amountPaid);
     }
 
-    public void writeTuple(Tuple tuple) {
-        try {
-            if (tuple != null) {
-                this.write(tuple.toString());
-                this.newLine();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
 }
