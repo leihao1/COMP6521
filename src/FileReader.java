@@ -1,7 +1,6 @@
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -9,62 +8,52 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class TupleReader extends BufferedReader {
-    private short tupleNumInOneBlock = 15;
-    private boolean isFinished = false;
-    private double preserveMemory = 0.0;
-    private File file;//TODO: delete file to save memory
-    private int ioCount = 0;
+public class FileReader extends BufferedReader {
 
-    public TupleReader(File file, float preserveMemPercentage) throws FileNotFoundException {
-        super(new FileReader(file));
-        this.preserveMemory = Utils.getMaxMemory() * preserveMemPercentage;
+    public float preserveMemory;
+    public File file;
+    public short tupleNumInOneBlock = 15;
+    public int ioCounter;
+    public boolean finish;
+
+    public FileReader(File file, float preserveMemPercentage) throws FileNotFoundException {
+        super(new java.io.FileReader(file));
+        this.preserveMemory = Runtime.getRuntime().maxMemory() * preserveMemPercentage;
         this.file = file;
     }
 
-    public List<Tuple> getNextBlock() {
+    public List<Tuple> getOneBlock() {
         List<Tuple> oneBlock = new ArrayList<>(tupleNumInOneBlock);
-        if (Utils.getFreeMemory() > preserveMemory) {
+        if (Runtime.getRuntime().freeMemory() > preserveMemory) {
             for (int i = 0; i < tupleNumInOneBlock; i++) {
-                Tuple oneTuple = getNextTuple();
+                Tuple oneTuple = getOneTuple();
                 if (oneTuple == null)
                     break;
                 oneBlock.add(oneTuple);
             }
             if (oneBlock.size() != 0)
-                ioCount++;
+                ioCounter++;
         }
         return oneBlock;
     }
 
-    private Tuple getNextTuple() {
+    private Tuple getOneTuple() {
         try {
             String nextLine = this.readLine();
             if (nextLine == null || nextLine.trim().equals("")) {
-                isFinished = true;
+                finish = true;
                 return null;
             }
-            return createTupleFromLine(nextLine);
+            return stringParser(nextLine);
         } catch (IOException e) {
             e.printStackTrace();
-            isFinished = true;
+            finish = true;
             return null;
         }
     }
 
-    public File getFile() { return file; }
-
-    public boolean isFinished() { return isFinished; }
-
-    public int getIOReadCount() { return ioCount; }
-
-
-    /**
-     * Extract info from a string to create a tuple
-     * @param line read from input file
-     * @return a tuple
-     */
-    private Tuple createTupleFromLine(String line) {
+    //parse one line file string to one tuple object
+    private Tuple stringParser(String line) {
         try {
             SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-mm-dd");
             int claimID = Integer.valueOf(line.substring(0, 8));
@@ -73,9 +62,9 @@ public class TupleReader extends BufferedReader {
             String clientName = line.substring(27, 52).trim();
             String clientAddress = line.substring(52, 202).trim();
             String clientEmail = line.substring(202, 230).trim();
-            short itemID = Short.valueOf(line.substring(230, 232));
-            double amountDamage = Double.valueOf(line.substring(232, 241));
-            double amountPaid = Double.valueOf(line.substring(241, 250));
+            byte itemID = Byte.valueOf(line.substring(230, 232));
+            float amountDamage = Float.valueOf(line.substring(232, 241));
+            float amountPaid = Float.valueOf(line.substring(241, 250));
             return new Tuple(claimID, claimDate, clientID, clientName, clientAddress,
                     clientEmail, itemID, amountDamage, amountPaid);
         } catch (ParseException e) {
@@ -83,4 +72,5 @@ public class TupleReader extends BufferedReader {
             return null;
         }
     }
+
 }

@@ -1,295 +1,383 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.*;
 
 public class Main {
-    private static int ioRead = 0;
-    private static int ioWrite = 0;
-    private static String inputPath = "";
-    private static String outputPath = "";
-    private static String inputFileName = "105000.txt";
-    private static float preserveMemPercentageP1 = 0.15f;
-    private static float preserveMemPercentageP2 = 0.0f;
-    private static float preserveMemPercentageP3 = 0.1f;
-    private static short maxFileToMerge = 80;
+    public static String inputFileName = "105000.txt";
+    public static String inputPath = "F:\\books\\COMP6521\\lab\\lab1\\src\\input\\";
+    public static String outputPath = "F:\\books\\COMP6521\\lab\\lab1\\src\\output\\";
+
+    public static float preserveMemory1 = 0.15f;
+    public static float preserveMemory2 = 0.0f;
+    public static float preserveMemory3 = 0.1f;
+
+    public static byte tupleNumInOneBlock = 15;
 
     public static void main(String[] args) {
-        Utils.prepareFolders(outputPath);
+        File outputFolder = new File(outputPath);
+        cleanFolder(outputFolder);
 
-        ioRead = 0;
-        ioWrite = 0;
-        long startTime1 = System.nanoTime();
+        long startTime = System.nanoTime();
         phaseOne();
-        System.out.printf("Phase 1 time: %.2f(s) %n", ((System.nanoTime() - startTime1) / 1000000000.0));
-        System.out.printf("IO_Read = %d, IO_Write = %d %n%n", ioRead, ioWrite);
-
-        ioRead = 0;
-        ioWrite = 0;
-        long startTime2 = System.nanoTime();
         phaseTwo();
-        System.out.printf("Phase 2 time: %.2f(s) %n", ((System.nanoTime() - startTime2) / 1000000000.0));
-        System.out.printf("IO_Read = %d, IO_Write = %d %n%n", ioRead, ioWrite);
+        phaseThree();
+        System.out.printf("Total Time: %.2f(s) %n", ((System.nanoTime() - startTime) / 1000000000.0));
 
-        ioRead = 0;
-        ioWrite = 0;
-        long startTime3 = System.nanoTime();
-        getTop10CostlyClients();
-        System.out.printf("Phase 3 time: %.2f(s) %n", ((System.nanoTime() - startTime3) / 1000000000.0));
-        System.out.printf("IO_Read = %d, IO_Write = %d %n%n", ioRead, ioWrite);
-        System.out.printf("Total time: %.2f(s) %n", ((System.nanoTime() - startTime1) / 1000000000.0));
+    }
+    //clean output folder
+    public static void cleanFolder(File outputFolder) {
+        if (outputFolder.exists()) {
+            for (File file : outputFolder.listFiles()) {
+                if (file.isDirectory()) {
+                    cleanFolder(file);
+                } else {
+                    file.delete();
+                }
+            }
+        } else {
+            outputFolder.mkdir();
+        }
     }
 
     private static void phaseOne() {
         System.out.println("Phase One Start");
-        TupleReader inputReader = null;
-        TupleWriter outputWriter = null;
-        try {
-            // Initializing reader
-            inputReader = new TupleReader(new File(inputPath + inputFileName), preserveMemPercentageP1); // TODO: tweak this number
 
-            // Keep requesting new blocks until running out of memory
-            // The reader is responsible for monitoring the memory
+        long startTime1 = System.nanoTime();
+        int diskReadCounter = 0;
+        int diskWriteCounter =0;
+
+        FileReader inputReader = null;
+        FileWriter outputWriter = null;
+
+        try {
+            inputReader = new FileReader(new File(inputPath + inputFileName), preserveMemory1);
+
             short batchCounter = 0;
-            long totalReadTime = 0;
-            long totalSortTime = 0;
-            long totalWriteTime = 0;
-            while (!inputReader.isFinished()) {
+            long diskReadTimer = 0;
+            long diskWriteTimer = 0;
+
+            // Repeatedly fill the M buffers with new tuples form whole file
+            while (!inputReader.finish) {
                 System.gc();
                 ArrayList<Tuple> oneBatch = new ArrayList<>();
 
                 long startTime = System.nanoTime();
+
+                //fill blocks in one batch until run out of memory
                 while (true) {
-                    List<Tuple> oneBlock = inputReader.getNextBlock();
-                    if (oneBlock.isEmpty()) { // Not enough memory or done reading input
+                    List<Tuple> oneBlock = inputReader.getOneBlock();
+                    //finish read or no left memory
+                    if (oneBlock.isEmpty()) {
                         break;
                     }
                     oneBatch.addAll(oneBlock);
                 }
-                totalReadTime += System.nanoTime() - startTime;
+                diskReadTimer += System.nanoTime() - startTime;
+                // Sort the batch
                 if (!oneBatch.isEmpty()) {
-                    // Sort the batch
-                    startTime = System.nanoTime();
-                    Utils.quickSort(oneBatch, 0, oneBatch.size() - 1);
-                    totalSortTime += System.nanoTime() - startTime;
-
+                    quickSort(oneBatch, 0, oneBatch.size() - 1);
                     // Dump the batch to a file
                     startTime = System.nanoTime();
                     batchCounter++;
-                    outputWriter = new TupleWriter(new File(String.format(outputPath + "%d.txt", batchCounter)));
-                    outputWriter.writeBatch(oneBatch);
-                    ioWrite += outputWriter.getIOWriteCount();
+                    outputWriter = new FileWriter(new File(String.format(outputPath + "%d.txt", batchCounter)));
+                    outputWriter.writeOneBatch(oneBatch, tupleNumInOneBlock);
+                    diskWriteCounter += outputWriter.ioCounter;
                     outputWriter.close();
-                    totalWriteTime += System.nanoTime() - startTime;
+                    diskWriteTimer += System.nanoTime() - startTime;
                     System.out.printf("Sort batch %d finish, %d tuples tn this batch %n", batchCounter, oneBatch.size());
                 }
             }
-            System.out.printf("Phase 1 Finish: #Batch = %d, totalReadTime = %ds, totalSortTime = %ds, " +
-                            "totalWriteTime = %ds %n", batchCounter, totalReadTime / 1000000000,
-                    totalSortTime / 1000000000, totalWriteTime / 1000000000);
+            System.out.printf("Phase One Finish: Total Batch = %d, Total Read Time = %.2f(s), " +
+                            "Total Write Time = %.2f(s) %n", batchCounter, diskReadTimer / 1000000000.0,
+                    diskWriteTimer / 1000000000.0);
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
             if (inputReader != null) {
-                ioRead += inputReader.getIOReadCount();
-                try { inputReader.close(); }
-                catch (IOException e) { e.printStackTrace(); }
+                diskReadCounter += inputReader.ioCounter;
+                try {
+                    inputReader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
             if (outputWriter != null) {
-                try { outputWriter.close(); }
-                catch (IOException e) { e.printStackTrace(); }
+                try {
+                    outputWriter.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
+
+        System.out.printf("Phase One Time: %.2f(s) %n", ((System.nanoTime() - startTime1) / 1000000000.0));
+        System.out.printf("Number Of I/O Read = %d, Number Of I/O Write = %d %n%n", diskReadCounter, diskWriteCounter);
     }
 
     private static void phaseTwo() {
         System.out.println("Phase Two Start");
+
+        long startTime2 = System.nanoTime();
+        int diskReadCounter = 0;
+        int diskWriteCounter = 0;
+
         File outputFolder = new File(outputPath);
         short passesCount = 0;
 
         while (outputFolder.listFiles().length > 1) {
-            mergeSortedFiles(outputFolder, ++passesCount);
-        }
-    }
+            ++passesCount;
+//            mergeSortedFiles(outputFolder, ++passesCount);
+            List<FileReader> inputReaders = null;
+            FileWriter outputWriter = null;
 
-    private static void mergeSortedFiles(File outputFolder, short passesCount) {
-        List<TupleReader> inputReaders = null;
-        TupleWriter outputWriter = null;
-        try {
-            int numOfFileToMerge = Math.min(outputFolder.listFiles().length, maxFileToMerge);//TODO:
-            List<List<Tuple>> inputBuffers = new ArrayList<>(numOfFileToMerge);
-            inputReaders = new ArrayList<>(numOfFileToMerge);
-            short fileCount = 0;
-            for (File tempFile : outputFolder.listFiles()) {
-                if (++fileCount > numOfFileToMerge)
-                    break;
+            try {
+                int numOfFileToMerge = Math.min(outputFolder.listFiles().length,80);//TODO:decide max file num
+                inputReaders = new ArrayList<>(numOfFileToMerge);
+                outputWriter = new FileWriter(new File(String.format(outputPath + "merged_%s.txt", passesCount)));
 
-                inputBuffers.add(new ArrayList<>());
-                inputReaders.add(new TupleReader(new File(tempFile.getAbsolutePath()), preserveMemPercentageP2));
-            }
-            outputWriter = new TupleWriter(new File(String.format(outputPath + "%s_merged.txt", passesCount)));
-            List<Tuple> outputBuffer = new ArrayList<>(Utils.getTupleNumInOneBlock());
+                List<List<Tuple>> inputBuffers = new ArrayList<>(numOfFileToMerge);
+                List<Tuple> outputBuffer = new ArrayList<>(tupleNumInOneBlock);
 
-            while (true) {
-                // Make sure no batch is empty
-                boolean allEmpty = true;
-                for (int i = 0; i < numOfFileToMerge; i++) { //fills in all input buffers with one block
-                    List<Tuple> oneBuffer = inputBuffers.get(i);
-//                    System.out.println("one batch size"+oneBatch.size());
-                    if (oneBuffer == null) // The batch is done, hence ignored
-                        continue;
-                    if (oneBuffer.isEmpty()) {
-                        TupleReader reader = inputReaders.get(i);
-                        List<Tuple> block = reader.getNextBlock();
+                short fileCount = 0;
 
-                        if (oneBuffer.isEmpty() && block.isEmpty() && reader.isFinished()) {
-                            inputBuffers.set(i, null);
-                        } else {
-                            allEmpty = false;
-                            oneBuffer.addAll(block);
-//                            System.out.printf("batch %d %d %n",i,batches.get(i).size());
-                        }
-                    } else {
-                        allEmpty = false;
-                    }
+                //create K(< M-1) input buffers and one output buffer
+                for (File tempFile : outputFolder.listFiles()) {
+                    if (++fileCount > numOfFileToMerge)
+                        break;
+                    inputReaders.add(new FileReader(new File(tempFile.getAbsolutePath()), preserveMemory2));
+                    inputBuffers.add(new ArrayList<>());
                 }
 
-                if (allEmpty) { // Done merging
-                    // Delete all temp files
+                while (true) {
+                    // set all buffer empty, wait to change
+                    boolean allBufferEmpty = true;
+
+                    // 1.fills in all input buffers with one block
                     for (int i = 0; i < numOfFileToMerge; i++) {
-                        ioRead += inputReaders.get(i).getIOReadCount();
-                        inputReaders.get(i).close();
-                        inputReaders.get(i).getFile().delete();
-                    }
-                    break;
-                }
-
-                while (true) { // Keep merging until 1 batch is empty or all batches are empty
-                    boolean emptyBuffer = false;
-                    Tuple smallestID = null;
-                    short smallestIndex = -1;
-                    for (short i = 0; i < numOfFileToMerge; i++) { //get local minimum among all input buffers
                         List<Tuple> oneBuffer = inputBuffers.get(i);
+//                    System.out.println("one batch size"+oneBatch.size());
+                        // finish merge this sublist, move to next
                         if (oneBuffer == null)
                             continue;
+                        // one block of input buffer is empty, read next block
                         if (oneBuffer.isEmpty()) {
-                            emptyBuffer = true;
+                            FileReader reader = inputReaders.get(i);
+                            List<Tuple> oneBlock = reader.getOneBlock();
+                            // all records in a sublist is finish merge, set to null to ignore
+                            if (oneBlock.isEmpty() && reader.finish) {
+                                inputBuffers.set(i, null);
+                            } else {
+                                allBufferEmpty = false;
+                                oneBuffer.addAll(oneBlock);
+//                            System.out.printf("batch %d %d %n",i,batches.get(i).size());
+                            }
+                        } else {
+                            allBufferEmpty = false;
+                        }
+                    }
+
+                    // all input buffer are empty, merge done
+                    if (allBufferEmpty) {
+                        // delete all temp files
+                        for (int i = 0; i < numOfFileToMerge; i++) {
+                            diskReadCounter += inputReaders.get(i).ioCounter;
+                            inputReaders.get(i).close();
+                            inputReaders.get(i).file.delete();
+                        }
+                        break;
+                    }
+
+                    // 2.keep merging until one buffer is empty
+                    while (true) {
+                        boolean emptyBuffer = false;
+                        Tuple minClient = null;
+                        int minClientIndex = -1;
+
+                        // get local minimum among all input buffers
+                        for (List<Tuple> buffer : inputBuffers) {
+                            // this sublist done, ignore and merge rest
+                            if (buffer == null)
+                                continue;
+                            // one buffer is empty, break to above code to fill
+                            if (buffer.isEmpty()) {
+                                emptyBuffer = true;
+                                break;
+                            }
+                            // get the first tuple in that buffer
+                            Tuple firstTuple = buffer.get(0);
+                            if (minClient == null || (firstTuple.clientID > minClient.clientID) ) {
+                                minClient = firstTuple;
+                                minClientIndex = inputBuffers.indexOf(buffer);
+                            }
+                        }
+
+                        // one buffer is empty, can not merge, go back to above code to fill
+                        if (emptyBuffer)
+                            break;
+
+                        // no tuples in ant input buffers, write whatever left in output buffer
+                        if (minClient == null) {
+                            if (!outputBuffer.isEmpty()) {
+                                outputWriter.writeOneBatch(outputBuffer, tupleNumInOneBlock);
+                                outputBuffer.clear();
+                            }
                             break;
                         }
-
-                        Tuple firstTuple = oneBuffer.get(0); // Get the first tuple
-                        if (smallestID == null || smallestID.compareTo(firstTuple) > 0) {
-                            smallestID = firstTuple;
-                            smallestIndex = i;
-                        }
-                    }
-
-                    if (emptyBuffer) // If one batch is empty, read a new block to fill it
-                        break;
-
-                    if (smallestID == null) { // When all done
-                        if (!outputBuffer.isEmpty()) {
-                            outputWriter.writeBatch(outputBuffer);
+                        // found one local minimum among first elements of each sublist, write to file
+                        outputBuffer.add(minClient);
+                        inputBuffers.get(minClientIndex).remove(0);
+                        if (outputBuffer.size() == tupleNumInOneBlock) {
+                            outputWriter.writeOneBatch(outputBuffer, tupleNumInOneBlock);
                             outputBuffer.clear();
                         }
-                        break;
-                    }
+                    }//end find minimum and merge
+                }//end phase two
 
-                    outputBuffer.add(smallestID);
-                    inputBuffers.get(smallestIndex).remove(0);
-                    if (outputBuffer.size() == Utils.getTupleNumInOneBlock()) {
-                        outputWriter.writeBatch(outputBuffer);
-                        outputBuffer.clear();
-                    }
+            } catch (Exception e) {
+                e.printStackTrace();
+                return;
+            } finally {
+                if (inputReaders != null) {
+                    inputReaders.forEach(reader -> {
+                        try { reader.close(); }
+                        catch (IOException e) { e.printStackTrace(); }
+                    });
+                }
+                if (outputWriter != null) {
+                    diskWriteCounter += outputWriter.ioCounter;
+                    try { outputWriter.close(); }
+                    catch (IOException e) { e.printStackTrace(); }
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return;
-        } finally {
-            if (inputReaders != null) {
-                inputReaders.forEach(reader -> {
-                    try { reader.close(); }
-                    catch (IOException e) { e.printStackTrace(); }
-                });
-            }
-            if (outputWriter != null) {
-                ioWrite += outputWriter.getIOWriteCount();
-                try { outputWriter.close(); }
-                catch (IOException e) { e.printStackTrace(); }
-            }
         }
+
+        System.out.printf("Phase Two Time: %.2f(s) %n", ((System.nanoTime() - startTime2) / 1000000000.0));
+        System.out.printf("Number Of IO Read = %d, Number Of IO Write = %d %n%n", diskReadCounter, diskWriteCounter);
     }
 
-    private static void getTop10CostlyClients() {
+    private static void phaseThree() {
         System.out.println("Phase Three Start");
+
+        long startTime3 = System.nanoTime();
+        int diskReadCounter = 0;
+        int diskWriteCounter = 0;
+
         File outputFolder = new File(outputPath);
         if (outputFolder.listFiles().length != 1) {
-            System.err.println("There are more than one merged file");
+            System.err.println("More Than One Merged Files");
             return;
         }
         File file = outputFolder.listFiles()[0];
-        TupleReader reader = null;
+        FileReader inputReader = null;
         try {
-            List<Tuple> buffer = new ArrayList<>();
-            reader = new TupleReader(file, preserveMemPercentageP3);
-            Map<Integer, Double> top10 = new HashMap<>();
+            List<Tuple> readBuffer = new ArrayList<>();
+            inputReader = new FileReader(file, preserveMemory3);
+            HashMap<Integer, Float> top10 = new HashMap<>();
             Integer currentClientId = null;
-            double currentClientPaid = 0.0;
-            while (!reader.isFinished()) {
-                buffer.clear();
+            float currentClientPaid = 0;
+            while (!inputReader.finish) {
+                readBuffer.clear();
+                // read blocks util run out of memory
                 while (true) {
-                    List<Tuple> block = reader.getNextBlock();
-                    if (block.isEmpty()) // Not enough memory or done reading input
+                    List<Tuple> block = inputReader.getOneBlock();
+                    if (block.isEmpty())
                         break;
-                    buffer.addAll(block);
+                    readBuffer.addAll(block);
                 }
-                for (Tuple tuple : buffer) {
-                    Integer newClientId = tuple.getClientID();
-                    if (currentClientId == null) { // First iteration
+                // go through whole merged file and keep top10 clients
+                for (Tuple tuple : readBuffer) {
+                    Integer newClientId = tuple.clientID;
+                    if (currentClientId == null) {
                         currentClientId = newClientId;
-                        currentClientPaid = 0.0;
-                    } else if (currentClientId.intValue() != newClientId.intValue()) { // Sum up old client, start calculating new client
+                        currentClientPaid = 0;
+                    // different client, compare paid
+                    } else if (currentClientId.intValue() != newClientId.intValue()) {
                         if (top10.size() < 10) {
                             top10.put(currentClientId, currentClientPaid);
                         } else {
-                            Integer smallestClientId = null;
-                            double smallestAmount = Double.MAX_VALUE;
-                            for (Entry<Integer, Double> entry : top10.entrySet()) {
-                                if (smallestAmount > entry.getValue().doubleValue()) {
-                                    smallestClientId = entry.getKey();
-                                    smallestAmount = entry.getValue().doubleValue();
+                            Integer minClientID = null;
+                            float minPaid = Float.MAX_VALUE;
+                            // get local minimum clientID in top10
+                            for (HashMap.Entry<Integer, Float> entry : top10.entrySet()) {
+                                if (minPaid > entry.getValue()) {
+                                    minClientID = entry.getKey();
+                                    minPaid = entry.getValue();
                                 }
                             }
-                            if (smallestAmount < currentClientPaid) {
-                                top10.remove(smallestClientId);
+                            // add new top10 member
+                            if (minPaid < currentClientPaid) {
+                                top10.remove(minClientID);
                                 top10.put(currentClientId, currentClientPaid);
                             }
                         }
                         currentClientId = newClientId;
-                        currentClientPaid = 0.0;
+                        currentClientPaid = 0;
                     }
-                    // Adding the paid amount
-                    currentClientPaid += tuple.getAmountPaid();
+                    // sum all paid of same client
+                    currentClientPaid += tuple.amountPaid;
                 }
             }
 
-            System.out.println("Top 10 costly clients: ");
-            for (Entry<Integer, Double> entry : top10.entrySet()) {
-                System.out.println("ClientID: " + entry.getKey() + ", Total Compensation: "+ entry.getValue());
+            System.out.println("Top 10 Costly Clients: ");
+            LinkedHashMap<Integer, Float> orderedTop10 = new LinkedHashMap<>();
+
+            while(orderedTop10.size() < 10) {
+                int maxClientID = 0;
+                float maxPaid = Float.MIN_VALUE;
+                for (HashMap.Entry<Integer, Float> entry : top10.entrySet()) {
+                    if (maxPaid < entry.getValue()) {
+                        maxClientID = entry.getKey();
+                        maxPaid = entry.getValue();
+                    }
+                }
+                top10.remove(maxClientID);
+                orderedTop10.put(maxClientID, maxPaid);
+            }
+            for(HashMap.Entry<Integer, Float> entry : orderedTop10.entrySet()) {
+                System.out.println("ClientID: " + entry.getKey() + ", Total Compensation: " + entry.getValue());
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } finally {
-            if (reader != null) {
-                ioRead += reader.getIOReadCount();
-                try { reader.close(); }
+            if (inputReader != null) {
+                diskReadCounter += inputReader.ioCounter;
+                try { inputReader.close(); }
                 catch (IOException e) { e.printStackTrace(); }
             }
         }
+
+        System.out.printf("Phase Three time: %.2f(s) %n", ((System.nanoTime() - startTime3) / 1000000000.0));
+        System.out.printf("Number Of IO Read = %d, Number Of IO Write = %d %n%n", diskReadCounter, diskWriteCounter);
     }
+
+    // quick sort base on clientID
+    public static void quickSort(List<Tuple> batch, int low, int high) {
+        int i = low, j = high;
+        Tuple pivot = batch.get(low + (high - low) / 2);
+        while (i <= j) {
+
+            while (batch.get(i).clientID < pivot.clientID) {
+                i++;
+            }
+            while (batch.get(j).clientID > pivot.clientID) {
+                j--;
+            }
+            if (i <= j) {
+                Tuple temp = batch.get(i);
+                batch.set(i, batch.get(j));
+                batch.set(j, temp);
+                i++;
+                j--;
+            }
+
+        }
+        if (low < j) {
+            quickSort(batch, low, j);
+        }
+        if (i < high) {
+            quickSort(batch, i, high);
+        }
+    }
+
 }
