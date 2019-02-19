@@ -10,8 +10,8 @@ import java.util.Map.Entry;
 public class TPMMS {
     private static int ioRead = 0;
     private static int ioWrite = 0;
-    private static String inputPath = "F:\\books\\COMP6521\\lab\\lab1\\src\\input\\";
-    private static String outputPath = "F:\\books\\COMP6521\\lab\\lab1\\src\\output\\";
+    private static String inputPath = "";
+    private static String outputPath = "";
     private static String inputFileName = "105000.txt";
     private static float preserveMemPercentageP1 = 0.15f;
     private static float preserveMemPercentageP2 = 0.0f;

@@ -1,7 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="3a5618a1-8533-45d2-9dd6-62efc65e53f7" name="Default" comment="" />
+    <list default="true" id="3a5618a1-8533-45d2-9dd6-62efc65e53f7" name="Default" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change beforePath="$PROJECT_DIR$/LA1.pdf" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/output/production/lab1/TPMMS.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/output/production/lab1/Tuple.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/output/production/lab1/TupleReader.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/output/production/lab1/TupleWriter.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/output/production/lab1/Utils.class" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/output/production/lab1/input/105000.txt" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/output/production/lab1/input/15000.txt" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/output/production/lab1/output/1.txt" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/src/TPMMS.java" afterPath="$PROJECT_DIR$/src/TPMMS.java" />
+    </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -15,8 +27,8 @@
       <file leaf-file-name="TPMMS.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/TPMMS.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1113">
-              <caret line="113" column="44" lean-forward="false" selection-start-line="113" selection-start-column="44" selection-end-line="113" selection-end-column="44" />
+            <state relative-caret-position="336">
+              <caret line="16" column="19" lean-forward="false" selection-start-line="16" selection-start-column="19" selection-end-line="16" selection-end-column="19" />
               <folding>
                 <element signature="imports" expanded="true" />
                 <element signature="method#phaseOne#0;class#TPMMS#0" expanded="false" />
@@ -65,9 +77,9 @@
         <option value="$PROJECT_DIR$/src/Main.java" />
         <option value="$PROJECT_DIR$/src/TupleWriter.java" />
         <option value="$PROJECT_DIR$/src/Utils.java" />
-        <option value="$PROJECT_DIR$/src/TPMMS.java" />
         <option value="$PROJECT_DIR$/src/Tuple.java" />
         <option value="$PROJECT_DIR$/src/TupleReader.java" />
+        <option value="$PROJECT_DIR$/src/TPMMS.java" />
       </list>
     </option>
   </component>
@@ -523,10 +535,18 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/README.md">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/TPMMS.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1113">
-          <caret line="113" column="44" lean-forward="false" selection-start-line="113" selection-start-column="44" selection-end-line="113" selection-end-column="44" />
+        <state relative-caret-position="336">
+          <caret line="16" column="19" lean-forward="false" selection-start-line="16" selection-start-column="19" selection-end-line="16" selection-end-column="19" />
           <folding>
             <element signature="imports" expanded="true" />
             <element signature="method#phaseOne#0;class#TPMMS#0" expanded="false" />
