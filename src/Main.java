@@ -4,13 +4,13 @@ import java.io.IOException;
 import java.util.*;
 
 public class Main {
-    public static String inputFileName = "105000.txt";
+    public static String inputFileName = "";
     public static String inputPath = "";
     public static String outputPath = "";
 
     public static float preserveMemory1 = 0.15f;
     public static float preserveMemory2 = 0.0f;
-    public static float preserveMemory3 = 0.15f;
+    public static float preserveMemory3 = 0.12f;
 
     public static byte tupleNumInOneBlock = 15;
 
@@ -86,11 +86,11 @@ public class Main {
                     diskWriteCounter += outputWriter.ioCounter;
                     outputWriter.close();
                     diskWriteTimer += System.nanoTime() - startTime;
-                    System.out.printf("Sort batch %d finish, %d tuples tn this batch %n", batchCounter, oneBatch.size());
+//                    System.out.printf("Sort batch %d finish, %d tuples tn this batch %n", batchCounter, oneBatch.size());
                 }
             }
-            System.out.printf("Phase One Finish: Total Batch = %d, Total Read Time = %.2f(s), " +
-                            "Total Write Time = %.2f(s) %n", batchCounter, diskReadTimer / 1000000000.0,
+            System.out.printf("Phase One Finish: Batch# = %d, IO Read Time = %.2f(s), " +
+                            "IO Write Time = %.2f(s) %n", batchCounter, diskReadTimer / 1000000000.0,
                     diskWriteTimer / 1000000000.0);
         } catch (IOException e) {
             e.printStackTrace();
@@ -112,7 +112,7 @@ public class Main {
             }
         }
 
-        System.out.printf("Phase One Time: %.2f(s) %n", ((System.nanoTime() - startTime1) / 1000000000.0));
+        System.out.printf("Total Time: %.2f(s) %n", ((System.nanoTime() - startTime1) / 1000000000.0));
         System.out.printf("Number Of I/O Read = %d, Number Of I/O Write = %d %n%n", diskReadCounter, diskWriteCounter);
     }
 
@@ -254,7 +254,7 @@ public class Main {
             }
         }
 
-        System.out.printf("Phase Two Time: %.2f(s) %n", ((System.nanoTime() - startTime2) / 1000000000.0));
+        System.out.printf("Phase Two Finish: Total Time = %.2f(s) %n", ((System.nanoTime() - startTime2) / 1000000000.0));
         System.out.printf("Number Of IO Read = %d, Number Of IO Write = %d %n%n", diskReadCounter, diskWriteCounter);
     }
 
@@ -278,8 +278,10 @@ public class Main {
             HashMap<Integer, Double> top10 = new HashMap<>();
             Integer currentClientId = null;
             double currentClientPaid = 0.0;
+            long diskReadTimer = 0;
             while (!inputReader.finish) {
                 readBuffer.clear();
+                long startTime = System.nanoTime();
                 // read blocks util run out of memory
                 while (true) {
                     List<Tuple> block = inputReader.getOneBlock();
@@ -287,6 +289,7 @@ public class Main {
                         break;
                     readBuffer.addAll(block);
                 }
+                diskReadTimer += System.nanoTime() - startTime;
                 // go through whole merged file and keep top10 clients
                 for (Tuple tuple : readBuffer) {
                     Integer newClientId = tuple.clientID;
@@ -340,6 +343,8 @@ public class Main {
             for(Map.Entry<Integer, Double> entry : orderedTop10.entrySet()) {
                 System.out.println("ClientID: " + entry.getKey() + ", Total Compensation: " + entry.getValue());
             }
+            System.out.printf("Phase Three Finish: IO Read Time = %.2f(s), Total Time = %.2f(s) %n",
+                    diskReadTimer / 1000000000.0, ((System.nanoTime() - startTime3) / 1000000000.0));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } finally {
@@ -349,8 +354,6 @@ public class Main {
                 catch (IOException e) { e.printStackTrace(); }
             }
         }
-
-        System.out.printf("Phase Three time: %.2f(s) %n", ((System.nanoTime() - startTime3) / 1000000000.0));
         System.out.printf("Number Of IO Read = %d, Number Of IO Write = %d %n%n", diskReadCounter, diskWriteCounter);
     }
 
