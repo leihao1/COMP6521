@@ -279,6 +279,9 @@ public class Main {
             Integer currentClientId = null;
             double currentClientPaid = 0.0;
             long diskReadTimer = 0;
+            Integer tempMinClient = null;
+            double tempMinPaid = Double.MAX_VALUE;
+            int flag = 0;
             while (!inputReader.finish) {
                 readBuffer.clear();
                 long startTime = System.nanoTime();
@@ -301,19 +304,35 @@ public class Main {
                         if (top10.size() < 10) {
                             top10.put(currentClientId, currentClientPaid);
                         } else {
-                            Integer minClientID = null;
-                            double minPaid = Double.MAX_VALUE;
-                            // get local minimum clientID in top10
-                            for (HashMap.Entry<Integer, Double> entry : top10.entrySet()) {
-                                if (minPaid > entry.getValue().doubleValue()) {
-                                    minClientID = entry.getKey();
-                                    minPaid = entry.getValue().doubleValue();
+                            if(flag == 0) {
+                                Integer minClientID = null;
+                                double minPaid = Double.MAX_VALUE;
+                                // get local minimum clientID in top10
+                                for (HashMap.Entry<Integer, Double> entry : top10.entrySet()) {
+                                    if (minPaid > entry.getValue().doubleValue()) {
+                                        minClientID = entry.getKey();
+                                        minPaid = entry.getValue().doubleValue();
+                                    }
                                 }
+                                tempMinClient = minClientID;
+                                tempMinPaid = minPaid;
+                                flag = 1;
                             }
                             // add new top10 member
-                            if (minPaid < currentClientPaid) {
-                                top10.remove(minClientID);
+                            if (tempMinPaid < currentClientPaid) {
+                                top10.remove(tempMinClient);
                                 top10.put(currentClientId, currentClientPaid);
+                                Integer minClientID = null;
+                                double minPaid = Double.MAX_VALUE;
+                                // get local minimum clientID in top10
+                                for (HashMap.Entry<Integer, Double> entry : top10.entrySet()) {
+                                    if (minPaid > entry.getValue().doubleValue()) {
+                                        minClientID = entry.getKey();
+                                        minPaid = entry.getValue().doubleValue();
+                                    }
+                                }
+                                tempMinClient = minClientID;
+                                tempMinPaid = minPaid;
                             }
                         }
                         currentClientId = newClientId;
