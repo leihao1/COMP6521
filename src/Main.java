@@ -4,13 +4,14 @@ import java.io.IOException;
 import java.util.*;
 
 public class Main {
-    public static String inputFileName = "105000.txt";
+    public static String inputFileName = "10000.txt";
     public static String inputPath = System.getProperty("user.dir")+"\\src\\input\\";
     public static String outputPath = System.getProperty("user.dir")+"\\src\\output\\";
 
     public static float preserveMemory1 = 0.15f;
     public static float preserveMemory2 = 0.0f;
     public static float preserveMemory3 = 0.12f;
+    public static short maxFilesToMerge = 80;//TODO:increase to save time
 
     public static byte tupleNumInOneBlock = 15;
 
@@ -133,7 +134,7 @@ public class Main {
             FileWriter outputWriter = null;
 
             try {
-                int numOfFileToMerge = Math.min(outputFolder.listFiles().length,80);//TODO:decide max file num
+                int numOfFileToMerge = Math.min(outputFolder.listFiles().length,maxFilesToMerge);
                 inputReaders = new ArrayList<>(numOfFileToMerge);
                 outputWriter = new FileWriter(new File(String.format(outputPath + "merged_%s.txt", passesCount)));
 
