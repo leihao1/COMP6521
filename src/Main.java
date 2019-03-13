@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.*;
 
 public class Main {
-    public static String inputFileName = "100000_50000.txt";
+    public static String inputFileName = "10000.txt";
     public static String inputPath = System.getProperty("user.dir")+"\\src\\input\\";
     public static String outputPath = System.getProperty("user.dir")+"\\src\\output\\";
 
@@ -96,7 +96,7 @@ public class Main {
             e.printStackTrace();
         } finally {
             if (inputReader != null) {
-                diskReadCounter += inputReader.ioCounter;
+                diskReadCounter = inputReader.ioCounter;
                 try {
                     inputReader.close();
                 } catch (IOException e) {
@@ -186,6 +186,11 @@ public class Main {
                             inputReaders.get(i).close();
                             inputReaders.get(i).file.delete();
                         }
+                        // no tuples in any input buffers, write whatever left in output buffer
+                        if (!outputBuffer.isEmpty()) {
+                            outputWriter.writeOneBatch(outputBuffer, tupleNumInOneBlock);
+                            outputBuffer.clear();
+                        }
                         break;
                     }
 
@@ -218,14 +223,6 @@ public class Main {
                         if (emptyBuffer)
                             break;
 
-                        // no tuples in any input buffers, write whatever left in output buffer
-                        if (minClient == null) {
-                            if (!outputBuffer.isEmpty()) {
-                                outputWriter.writeOneBatch(outputBuffer, tupleNumInOneBlock);
-                                outputBuffer.clear();
-                            }
-                            break;
-                        }
                         // found one local minimum among first elements of each sublist, write to file
                         outputBuffer.add(minClient);
                         inputBuffers.get(minClientIndex).remove(0);
@@ -234,6 +231,7 @@ public class Main {
                             outputBuffer.clear();
                         }
                     }//end find minimum and merge
+
                 }//end phase two
 
             } catch (Exception e) {
@@ -247,7 +245,7 @@ public class Main {
                     });
                 }
                 if (outputWriter != null) {
-                    diskWriteCounter += outputWriter.ioCounter;
+                    diskWriteCounter = outputWriter.ioCounter;
                     try { outputWriter.close(); }
                     catch (IOException e) { e.printStackTrace(); }
                 }
