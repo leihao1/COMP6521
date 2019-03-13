@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.util.*;
 
 public class Main {
-    public static String inputFileName = "";
-    public static String inputPath = "";
-    public static String outputPath = "";
+    public static String inputFileName = "100000_50000.txt";
+    public static String inputPath = System.getProperty("user.dir")+"\\src\\input\\";
+    public static String outputPath = System.getProperty("user.dir")+"\\src\\output\\";
 
     public static float preserveMemory1 = 0.15f;
     public static float preserveMemory2 = 0.0f;
@@ -218,7 +218,7 @@ public class Main {
                         if (emptyBuffer)
                             break;
 
-                        // no tuples in ant input buffers, write whatever left in output buffer
+                        // no tuples in any input buffers, write whatever left in output buffer
                         if (minClient == null) {
                             if (!outputBuffer.isEmpty()) {
                                 outputWriter.writeOneBatch(outputBuffer, tupleNumInOneBlock);
