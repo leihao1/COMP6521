@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="3a5618a1-8533-45d2-9dd6-62efc65e53f7" name="Default" comment="monitor left memory to decide max merge files">
+    <list default="true" id="3a5618a1-8533-45d2-9dd6-62efc65e53f7" name="Default" comment="update gitignore">
       <change beforePath="$PROJECT_DIR$/.gitignore" afterPath="$PROJECT_DIR$/.gitignore" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
@@ -286,7 +286,8 @@
     <MESSAGE value="add common file path" />
     <MESSAGE value="fix serious bug in phase two : did not write left tuples in last batch" />
     <MESSAGE value="monitor left memory to decide max merge files" />
-    <option name="LAST_COMMIT_MESSAGE" value="monitor left memory to decide max merge files" />
+    <MESSAGE value="update gitignore" />
+    <option name="LAST_COMMIT_MESSAGE" value="update gitignore" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
