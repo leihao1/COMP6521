@@ -10,8 +10,8 @@ import java.util.Map.Entry;
 public class TPMMS {
     private static int ioRead = 0;
     private static int ioWrite = 0;
-    private static String inputPath = "F:\\books\\COMP6521\\lab\\lab1\\src\\input\\";
-    private static String outputPath = "F:\\books\\COMP6521\\lab\\lab1\\src\\output\\";
+    private static String inputPath = System.getProperty("user.dir")+"\\src\\input\\";
+    private static String outputPath = System.getProperty("user.dir")+"\\src\\output\\";
     private static String inputFileName = "105000.txt";
     private static float preserveMemPercentageP1 = 0.2f;
     private static float preserveMemPercentageP2 = 0.0f;
@@ -86,7 +86,7 @@ public class TPMMS {
                     ioWrite += outputWriter.getIOWriteCount();
                     outputWriter.close();
                     totalWriteTime += System.nanoTime() - startTime;
-                    System.out.printf("Sort batch %d finish, %d tuples tn this batch %n", batchCounter, oneBatch.size());
+//                    System.out.printf("Sort batch %d finish, %d tuples tn this batch %n", batchCounter, oneBatch.size());
                 }
             }
             System.out.printf("Phase 1 Finish: #Batch = %d, totalReadTime = %ds, totalSortTime = %ds, " +
@@ -166,6 +166,10 @@ public class TPMMS {
                         inputReaders.get(i).close();
                         inputReaders.get(i).getFile().delete();
                     }
+                    if (!outputBuffer.isEmpty()) {
+                        outputWriter.writeBatch(outputBuffer);
+                        outputBuffer.clear();
+                    }
                     break;
                 }
 
@@ -191,14 +195,6 @@ public class TPMMS {
 
                     if (emptyBuffer) // If one batch is empty, read a new block to fill it
                         break;
-
-                    if (smallestID == null) { // When all done
-                        if (!outputBuffer.isEmpty()) {
-                            outputWriter.writeBatch(outputBuffer);
-                            outputBuffer.clear();
-                        }
-                        break;
-                    }
 
                     outputBuffer.add(smallestID);
                     inputBuffers.get(smallestIndex).remove(0);
