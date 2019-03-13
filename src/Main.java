@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.*;
 
 public class Main {
-    public static String inputFileName = "10000.txt";
+    public static String inputFileName = "105000.txt";
     public static String inputPath = System.getProperty("user.dir")+"\\src\\input\\";
     public static String outputPath = System.getProperty("user.dir")+"\\src\\output\\";
 
@@ -250,6 +250,7 @@ public class Main {
                     catch (IOException e) { e.printStackTrace(); }
                 }
             }
+            System.out.println("min mem : "+Runtime.getRuntime().freeMemory());
         }
 
         System.out.printf("Phase Two Finish: Total Time = %.2f(s) %n", ((System.nanoTime() - startTime2) / 1000000000.0));
