@@ -5,8 +5,8 @@ import java.util.*;
 
 public class Main {
     public static String inputFileName = "small.txt";
-    public static String inputPath = System.getProperty("user.dir")+"\\src\\input\\";
-    public static String outputPath = System.getProperty("user.dir")+"\\src\\output\\";
+    public static String inputPath = System.getProperty("user.dir")+"\\lab1\\src\\input\\";
+    public static String outputPath = System.getProperty("user.dir")+"\\lab1\\src\\output\\";
 
     public static float preserveMemory1 = 0.15f;
     public static float preserveMemory2 = 0.0f;
