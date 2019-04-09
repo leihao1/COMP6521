@@ -2,3 +2,5 @@
 out/
 *.iml
 *.txt
+*.rq
+*.nnq
