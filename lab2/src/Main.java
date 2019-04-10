@@ -123,12 +123,9 @@ public class Main {
 //                }
 
                 //twice faster than using split()
-                String x = line.substring(1,9);
-                String y = line.substring(11,19);
-                String z = line.substring(21,29);
-                int xKey = (int)Math.ceil(Double.valueOf(x)/CONSTANT.BUCKET_SIZE);
-                int yKey = (int)Math.ceil(Double.valueOf(y)/CONSTANT.BUCKET_SIZE);
-                int zKey = (int)Math.ceil(Double.valueOf(z)/CONSTANT.BUCKET_SIZE);
+                int xKey = (int)Math.ceil(Double.valueOf(line.substring(1,9))/CONSTANT.BUCKET_SIZE);
+                int yKey = (int)Math.ceil(Double.valueOf(line.substring(11,19))/CONSTANT.BUCKET_SIZE);
+                int zKey = (int)Math.ceil(Double.valueOf(line.substring(21,29))/CONSTANT.BUCKET_SIZE);
 
                 if(!inDisk) {
                     if (!index.containsKey(xKey)) {
@@ -199,6 +196,11 @@ public class Main {
         zLow = (int) Math.ceil(ZL / CONSTANT.BUCKET_SIZE);
         zHigh = (int) Math.ceil(ZH / CONSTANT.BUCKET_SIZE);
 
+        boolean wholeFile = false;
+        if(XL==0 && XH==1000 && YL==0 && YH==1000 && ZL==0 && ZH==1000){
+            wholeFile = true;
+        }
+
         ArrayList<StringBuilder> result = new ArrayList<>();
 
         int length =0;
@@ -208,11 +210,17 @@ public class Main {
                     if (index.get(i).containsKey(j)) {
                         for (int k = zLow; k <= zHigh; k++) {
                             if (index.get(i).get(j).containsKey(k)) {
-                                //no need to check string , just add
-                                if(i>xLow && i<xHigh && j>yLow && j<yHigh && k>zLow && k<zHigh){
+                                if(wholeFile){
                                     result.add(index.get(i).get(j).get(k));
                                     length += index.get(i).get(j).get(k).length();
-                                }else{//no to look inside string to check value
+                                }
+                                //no need to check string , just add
+                                else if(i>xLow && i<xHigh && j>yLow && j<yHigh && k>zLow && k<zHigh){
+                                    result.add(index.get(i).get(j).get(k));
+                                    length += index.get(i).get(j).get(k).length();
+                                }
+                                //look inside string to check value
+                                else{
                                     int pointer =0;
                                     while(pointer<=index.get(i).get(j).get(k).length()-30){
                                         try {
@@ -237,7 +245,7 @@ public class Main {
             }
         }
         System.out.printf("Range Query Finished. Total Time: %.3f(s) %n", ((System.nanoTime() - start) / 1000000000.0));
-        System.out.println("Range Query Point Number : "+length);
+        System.out.println("Range Query Point Number : "+length/30);
         return result;
 
     }
